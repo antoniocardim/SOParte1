@@ -148,7 +148,7 @@ int kvs_processor(int input_fd, int output_fd) {
       fprintf(stderr, "Invalid command. See HELP for usage\n");
       break;
 
-    case CMD_HELP:
+    case CMD_HELP:{
       char *buf = "Available commands:\n"
                   "  WRITE [(key,value)(key2,value2),...]\n"
                   "  READ [key,key2,...]\n"
@@ -160,6 +160,7 @@ int kvs_processor(int input_fd, int output_fd) {
       write(output_fd, buf, strlen(buf));
 
       break;
+    }
 
     case CMD_EMPTY:
       break;

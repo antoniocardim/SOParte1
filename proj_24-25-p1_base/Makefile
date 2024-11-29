@@ -20,7 +20,7 @@ kvs: main.c constants.h operations.o parser.o kvs.o
 	$(CC) $(CFLAGS) -c ${@:.o=.c}
 
 run: kvs
-	@./kvs
+	@./kvs "./jobs"
 
 clean:
 	rm -f *.o kvs
