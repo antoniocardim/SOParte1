@@ -47,7 +47,7 @@ int main(int argc, char *argv[]) {
       char output_path[MAX_JOB_FILE_NAME_SIZE] = "";
       strncpy(output_path, input_path, strlen(input_path) - 4);
       strcat(output_path, ".out");
-      int output_fd = open(output_path, O_CREAT | O_RDWR | O_TRUNC, S_IRUSR | S_IWUSR | S_IROTH | S_IRGRP);
+      int output_fd = open(output_path, O_CREAT | O_WRONLY | O_TRUNC, S_IRUSR | S_IWUSR | S_IROTH | S_IRGRP);
       kvs_processor(input_fd, output_fd);
       
       close(output_fd);
