@@ -44,14 +44,16 @@ struct list {
 
 typedef struct list *Q;
 
+  Q q;
+
 
 int kvs_processor(int input_fd, int output_fd, char input_path[], struct file_t file);
-void insert_to_end(Q q, struct file_t file);
+void insert_to_end( struct file_t file);
 queue new_args (struct file_t file, queue next);
-Q init_head_and_tail();
+void init_head_and_tail();
 void *thread_processer(void* arg);
-struct file_t get_and_delete(Q q);
-int q_empty(Q q);
+struct file_t get_and_delete();
+int q_empty();
 
 int main(int argc, char *argv[]) {
   if (argc != 4) {
@@ -70,7 +72,6 @@ int main(int argc, char *argv[]) {
   DIR *dir = opendir(argv[1]);
   struct dirent* dp;
   queue_size = max_threads;
-  Q q = init_head_and_tail();
   pthread_mutex_init(&locker,NULL);
 
   if (!dir) {
@@ -79,7 +80,7 @@ int main(int argc, char *argv[]) {
   }
   
   pthread_t thread[max_threads];
-  
+  init_head_and_tail(q);
   
   
   
@@ -89,7 +90,7 @@ int main(int argc, char *argv[]) {
     strncpy(new_file.directory, argv[1], MAX_JOB_FILE_NAME_SIZE);
     new_file.backup_count = 0;
     new_file.process_count = 0;
-    insert_to_end(q, new_file);
+    insert_to_end(new_file);
     file_counter++;
   }
 
@@ -188,7 +189,7 @@ int kvs_processor(int input_fd, int output_fd, char input_path[], struct file_t 
         file.process_count++;
         file.backup_count++;
         
-        if(file.process_count >= max_backups) {
+        if(file.process_count > max_backups) {
           wait(NULL);
           file.process_count--;
         }
@@ -232,7 +233,7 @@ int kvs_processor(int input_fd, int output_fd, char input_path[], struct file_t 
   }
   
 
-void insert_to_end(Q q, struct file_t file){
+void insert_to_end(struct file_t file){
   if (q->head == NULL){
     q->head = (q->tail = new_args(file, q->head));
     return;
@@ -241,7 +242,7 @@ void insert_to_end(Q q, struct file_t file){
   q->tail = q->tail->next;
 
 }
-struct file_t get_and_delete(Q q){
+struct file_t get_and_delete(){
   struct file_t file = q->head->file;
   queue temp = q->head->next;
   free(q->head);
@@ -261,25 +262,24 @@ queue new_args (struct file_t file, queue next){
   
 }
 
-Q init_head_and_tail(){
-  Q q = malloc(sizeof(struct list));
+void init_head_and_tail(){
+  q = malloc(sizeof(struct list));
   q->head = NULL;
   q->tail = NULL;
-  return q;
 }
 
-int q_empty(Q q){
+int q_empty(){
   return q->head == NULL;
 }
 
 void *thread_processer(void *arg){
-  printf("Thread created\n");
+  pthread_mutex_lock(&locker);
   Q args = (Q)arg;
   while (1){
-    pthread_mutex_lock(&locker);
     if (!q_empty(args)){
       struct file_t file_arg = get_and_delete(args);
-      pthread_mutex_unlock(&locker);
+      printf("File %s processing\n", file_arg.name);
+      printf("Current thread: %ld || Current file: %s \n", pthread_self(), file_arg.name); 
       if (strcmp(file_arg.name, ".") != 0 && strcmp(file_arg.name, "..") != 0 && strcmp(strrchr(file_arg.name, '.'), ".job") == 0) {
         char input_path[MAX_JOB_FILE_NAME_SIZE] = "";
         strcpy(input_path, file_arg.directory);
@@ -304,7 +304,6 @@ void *thread_processer(void *arg){
         close(output_fd);
         close(input_fd);
       }  
-      pthread_mutex_lock(&locker);
       file_counter--;
       printf("File %s processed\n", file_arg.name);
       printf("Files_left: %d \n", file_counter);

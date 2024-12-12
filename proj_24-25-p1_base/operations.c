@@ -87,8 +87,9 @@ int kvs_read(size_t num_pairs, char keys[][MAX_STRING_SIZE], int output_fd) {
   pthread_mutex_lock(&kvs_table->locker_hashtable);
   if (kvs_table == NULL) {
     fprintf(stderr, "KVS state must be initialized\n");
-    return 1;
     pthread_mutex_unlock(&kvs_table->locker_hashtable);
+    return 1;
+    
   }
   pthread_mutex_unlock(&kvs_table->locker_hashtable);
 
@@ -129,8 +130,8 @@ int kvs_delete(size_t num_pairs, char keys[][MAX_STRING_SIZE], int output_fd) {
   pthread_mutex_lock(&kvs_table->locker_hashtable);
   if (kvs_table == NULL) {
     fprintf(stderr, "KVS state must be initialized\n");
-    return 1;
     pthread_mutex_unlock(&kvs_table->locker_hashtable);
+    return 1;
   }
   pthread_mutex_unlock(&kvs_table->locker_hashtable);
   char final[MAX_WRITE_SIZE] = "";
