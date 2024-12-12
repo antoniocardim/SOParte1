@@ -9,6 +9,8 @@
 // @return hash.
 // NOTE: This is not an ideal hash function, but is useful for test purposes of
 // the project
+
+
 int hash(const char *key) {
   int firstLetter = tolower(key[0]);
   if (firstLetter >= 'a' && firstLetter <= 'z') {

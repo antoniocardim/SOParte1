@@ -1,2 +1,7 @@
 WRITE [(Eca,Escritor1)]
 READ [chave2]
+BACKUP
+WRITE [(Pedro,Escritor2)]
+BACKUP
+WRITE [(Joao,Escritor3)]
+BACKUP

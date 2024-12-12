@@ -247,7 +247,7 @@ size_t parse_read_delete(int fd, char keys[][MAX_STRING_SIZE], size_t max_keys,
       cleanup(fd);
       return 0;
     }
-
+    
     strcpy(keys[num_keys++], key);
 
     if (output == 2) {

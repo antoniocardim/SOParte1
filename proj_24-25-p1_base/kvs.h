@@ -4,15 +4,19 @@
 #define TABLE_SIZE 26
 
 #include <stddef.h>
+#include <pthread.h>
+
 
 typedef struct KeyNode {
   char *key;
   char *value;
   struct KeyNode *next;
+  //pthread_rwlock_t locker_keynode;
 } KeyNode;
 
 typedef struct HashTable {
   KeyNode *table[TABLE_SIZE];
+  pthread_mutex_t locker_hashtable;
 } HashTable;
 
 /// Creates a new event hash table.
