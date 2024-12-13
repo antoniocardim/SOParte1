@@ -108,7 +108,7 @@ int main(int argc, char *argv[]) {
     }
     printf("Thread %d joined\n", i);
   }
-  
+  printf("All threads joined\n");
   pthread_mutex_destroy(&locker);
   kvs_terminate();
   closedir(dir);
@@ -201,9 +201,10 @@ int kvs_processor(int input_fd, int output_fd, char input_path[], struct file_t 
           exit(0);
         } else if (pid < 0) {
           fprintf(stderr, "Failed to create backup\n"); 
+          break;
           
         } else {
-          continue;
+          break;
         }
         break;
 
@@ -275,9 +276,13 @@ int q_empty(){
 void *thread_processer(void *arg){
   pthread_mutex_lock(&locker);
   Q args = (Q)arg;
+  pthread_mutex_unlock(&locker);
   while (1){
+    pthread_mutex_lock(&locker);
     if (!q_empty(args)){
+      
       struct file_t file_arg = get_and_delete(args);
+      pthread_mutex_unlock(&locker);
       printf("File %s processing\n", file_arg.name);
       printf("Current thread: %ld || Current file: %s \n", pthread_self(), file_arg.name); 
       if (strcmp(file_arg.name, ".") != 0 && strcmp(file_arg.name, "..") != 0 && strcmp(strrchr(file_arg.name, '.'), ".job") == 0) {
@@ -298,24 +303,28 @@ void *thread_processer(void *arg){
           fprintf(stderr, "Failed to open file: %s\n", strerror(errno));
           return NULL;
         }
-        
+        pthread_mutex_lock(&locker);
         kvs_processor(input_fd, output_fd, input_path, file_arg);
-        
+        pthread_mutex_unlock(&locker);
         close(output_fd);
         close(input_fd);
       }  
+      pthread_mutex_lock(&locker);
       file_counter--;
       printf("File %s processed\n", file_arg.name);
       printf("Files_left: %d \n", file_counter);
       
-      if(file_counter == 0){
+      if(q_empty(args)){
         pthread_mutex_unlock(&locker);
         return NULL;
       }
       pthread_mutex_unlock(&locker);
-    }else{
-      pthread_mutex_unlock(&locker);
     }
+    if(q_empty(args) && file_counter == 0){
+      pthread_mutex_unlock(&locker);
+      return NULL;
+    }
+    pthread_mutex_unlock(&locker);
   }
   return NULL;
 }
