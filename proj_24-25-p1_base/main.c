@@ -106,9 +106,7 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "Failed to join thread begining: %s\n", strerror(errno));
         return 1;
     }
-    printf("Thread %d joined\n", i);
   }
-  printf("All threads joined\n");
   pthread_mutex_destroy(&locker);
   kvs_terminate();
   closedir(dir);
@@ -185,7 +183,6 @@ int kvs_processor(int input_fd, int output_fd, char input_path[], struct file_t 
         break;
 
       case CMD_BACKUP:
-        printf("Backup\n");
         file.process_count++;
         file.backup_count++;
         
@@ -197,7 +194,6 @@ int kvs_processor(int input_fd, int output_fd, char input_path[], struct file_t 
         pid_t pid = fork();
         if (pid == 0) {
           kvs_backup(input_path, file.backup_count);
-          printf("Processes: %d\nBackup count: %d\n", file.process_count, file.backup_count); 
           exit(0);
         } else if (pid < 0) {
           fprintf(stderr, "Failed to create backup\n"); 
@@ -283,8 +279,6 @@ void *thread_processer(void *arg){
       
       struct file_t file_arg = get_and_delete(args);
       pthread_mutex_unlock(&locker);
-      printf("File %s processing\n", file_arg.name);
-      printf("Current thread: %ld || Current file: %s \n", pthread_self(), file_arg.name); 
       if (strcmp(file_arg.name, ".") != 0 && strcmp(file_arg.name, "..") != 0 && strcmp(strrchr(file_arg.name, '.'), ".job") == 0) {
         char input_path[MAX_JOB_FILE_NAME_SIZE] = "";
         strcpy(input_path, file_arg.directory);
@@ -311,9 +305,6 @@ void *thread_processer(void *arg){
       }  
       pthread_mutex_lock(&locker);
       file_counter--;
-      printf("File %s processed\n", file_arg.name);
-      printf("Files_left: %d \n", file_counter);
-      
       if(q_empty(args)){
         pthread_mutex_unlock(&locker);
         return NULL;
